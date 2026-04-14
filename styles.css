@@ -1,0 +1,211 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f3f6fb;
+  color: #162033;
+}
+.shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 18px;
+}
+.app-header {
+  background: #fff;
+  border-bottom: 1px solid #dbe4f0;
+  padding: 20px 0 16px;
+}
+.app-header h1 { margin: 0 0 8px; font-size: 26px; }
+.app-header p { margin: 0; color: #50607b; }
+.gnb {
+  background: #fff;
+  border-bottom: 1px solid #e3e9f5;
+}
+.gnb-inner {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.tab-btn {
+  border: 1px solid #d7e1f2;
+  background: #fff;
+  color: #2f3f58;
+  border-radius: 999px;
+  min-height: 38px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: #1f4fd7;
+  color: #fff;
+  border-color: #1f4fd7;
+}
+.app-main {
+  margin: 20px auto;
+  padding-bottom: 36px;
+}
+.screen {
+  display: grid;
+  gap: 14px;
+}
+.hidden { display: none; }
+.card {
+  background: #fff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 16px;
+}
+.hero {
+  background: linear-gradient(180deg, #f7faff, #ffffff);
+}
+.hero-chip {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #e9f0ff;
+  color: #214198;
+}
+.hero h2 { margin: 10px 0 6px; }
+.hero-copy { margin: 0 0 14px; color: #4e5f7a; }
+.search-line {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.quick-tags {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tag-btn {
+  min-height: 34px;
+  border-radius: 999px;
+  border: 1px solid #cfdbf2;
+  background: #fff;
+  color: #2b466f;
+  cursor: pointer;
+}
+.row { display: flex; gap: 10px; align-items: center; }
+.between { justify-content: space-between; }
+.wrap { flex-wrap: wrap; }
+input, select, button {
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid #cad6ea;
+  padding: 0 12px;
+}
+input { flex: 1; }
+button {
+  background: #1f4fd7;
+  color: #fff;
+  border: 1px solid #1f4fd7;
+  cursor: pointer;
+  font-weight: 600;
+}
+button:disabled { background: #95a3bc; border-color: #95a3bc; cursor: not-allowed; }
+.tab-btn:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #4f7fff;
+  outline-offset: 1px;
+}
+.ghost {
+  background: #fff;
+  color: #1f4fd7;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.filters label { display: grid; gap: 6px; color: #31425d; font-size: 14px; }
+.trust-system ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #415574;
+}
+.muted { color: #576b8a; }
+.top-conclusion {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eaf2ff;
+  color: #1c3c83;
+  font-weight: 600;
+}
+.recommend-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+}
+.item {
+  border: 1px solid #d9e3f3;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+}
+.item h3 { margin: 10px 0 8px; font-size: 17px; }
+.badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #edf2ff;
+  color: #283f8f;
+  display: inline-block;
+}
+.decision-chip {
+  margin-left: 6px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e8f7ee;
+  color: #0c7a39;
+}
+.meta { font-size: 13px; color: #41516d; margin: 8px 0; line-height: 1.4; }
+.meta.strong { color: #1d3159; font-weight: 600; }
+.decision-panel p { color: #2e3f5f; }
+.status { margin-top: 8px; color: #0f766e; font-size: 14px; }
+.compare-table {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+.compare-table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+.compare-table th, .compare-table td {
+  border: 1px solid #dce5f3;
+  padding: 8px;
+  text-align: left;
+  font-size: 13px;
+  color: #324869;
+  vertical-align: top;
+}
+.compare-table th { background: #f2f6fe; }
+.empty { color: #667a99; font-size: 14px; }
+.verified-mark {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e7f8ef;
+  color: #116d3d;
+  font-size: 12px;
+  font-weight: 600;
+}
+dialog {
+  border: 1px solid #d1dff4;
+  border-radius: 12px;
+  max-width: 620px;
+  width: calc(100% - 24px);
+}
+@media (max-width: 768px) {
+  .app-header h1 { font-size: 22px; }
+  .recommend-list { grid-template-columns: 1fr; }
+}
