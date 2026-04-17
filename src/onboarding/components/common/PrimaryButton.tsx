@@ -12,7 +12,7 @@ export default function PrimaryButton({
   return (
     <button
       {...props}
-      className={`h-12 w-full rounded-xl bg-violet-600 px-4 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-slate-300 ${className}`}
+      className={`h-12 w-full rounded-xl bg-[#FF853E] px-4 text-sm font-semibold text-white transition hover:bg-[#FF6F1F] disabled:cursor-not-allowed disabled:bg-slate-300 ${className}`}
     >
       {children}
     </button>

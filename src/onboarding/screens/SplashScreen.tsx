@@ -1,10 +1,19 @@
 export default function SplashScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-violet-100 to-white">
-      <div className="space-y-4 text-center">
-        <div className="mx-auto h-16 w-16 rounded-2xl bg-violet-600" />
-        <h1 className="text-3xl font-extrabold text-violet-700">육아 통합 플랫폼</h1>
-        <p className="text-sm text-slate-600">아이의 성장, 매일 더 쉽게</p>
+    <div className="flex min-h-dvh items-center justify-center bg-[#FF853E]">
+      <div className="flex w-full max-w-sm flex-col items-center space-y-4 px-4 text-center">
+        <img
+          src="/app-icon-transparent.png"
+          alt="앱 아이콘"
+          width={151}
+          height={151}
+          decoding="async"
+          fetchPriority="high"
+          className="h-[151px] w-[151px] shrink-0 object-contain brightness-0 invert drop-shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
+        />
+        <p className="min-h-[3.25rem] w-full max-w-[min(100%,20rem)] text-pretty px-2 text-base font-semibold leading-snug text-white [text-rendering:geometricPrecision]">
+          여기저기 찾지 말고, 한곳에서
+        </p>
       </div>
     </div>
   );

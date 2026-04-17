@@ -14,7 +14,7 @@ export default function StepIndicator({
           <div
             key={idx}
             className={`h-2 flex-1 rounded-full ${
-              idx <= currentIndex ? "bg-violet-500" : "bg-slate-200"
+              idx <= currentIndex ? "bg-[#FF853E]" : "bg-slate-200"
             }`}
           />
         ))}

@@ -4,22 +4,30 @@ interface SelectChipProps {
   selected: boolean;
   onClick: () => void;
   children: ReactNode;
+  className?: string;
+  disabled?: boolean;
+  title?: string;
 }
 
 export default function SelectChip({
   selected,
   onClick,
   children,
+  className = "",
+  disabled = false,
+  title,
 }: SelectChipProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+      disabled={disabled}
+      title={title}
+      className={`rounded-full border px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed ${
         selected
-          ? "border-violet-600 bg-violet-50 text-violet-700"
-          : "border-slate-300 text-slate-600 hover:border-slate-400"
-      }`}
+          ? "border-[#FF853E] bg-[#FFF1EA] text-[#FF853E]"
+          : "border-slate-300 text-slate-600 hover:border-slate-400 disabled:hover:border-slate-300"
+      } ${className}`}
     >
       {children}
     </button>

@@ -16,7 +16,7 @@ export default function InputField({
       <span className="text-sm font-medium text-slate-700">{label}</span>
       <input
         {...props}
-        className={`h-11 w-full rounded-xl border px-3 text-sm outline-none transition focus:border-violet-500 ${
+        className={`h-11 w-full rounded-xl border px-3 text-sm outline-none transition focus:border-[#FF853E] ${
           error ? "border-rose-400" : "border-slate-300"
         } ${className}`}
       />

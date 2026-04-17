@@ -1,4 +1,5 @@
 import SelectChip from "../components/common/SelectChip";
+import { INTEREST_CATEGORY_OPTIONS, INTEREST_SELECTION_MAX } from "../interestCategories";
 
 interface InterestSelectProps {
   selected: string[];
@@ -6,25 +7,33 @@ interface InterestSelectProps {
   error?: string;
 }
 
-const categories = ["언어", "놀이", "운동", "수면", "식습관", "정서"];
-
 export default function InterestSelect({
   selected,
   onToggle,
   error,
 }: InterestSelectProps) {
+  const atMax = selected.length >= INTEREST_SELECTION_MAX;
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {categories.map((item) => (
-          <SelectChip
-            key={item}
-            selected={selected.includes(item)}
-            onClick={() => onToggle(item)}
-          >
-            {item}
-          </SelectChip>
-        ))}
+        {INTEREST_CATEGORY_OPTIONS.map((item) => {
+          const isSelected = selected.includes(item);
+          const disableSelect = !isSelected && atMax;
+          return (
+            <SelectChip
+              key={item}
+              selected={isSelected}
+              onClick={() => onToggle(item)}
+              className={
+                disableSelect ? "cursor-not-allowed opacity-45" : undefined
+              }
+              title={disableSelect ? `관심 영역은 최대 ${INTEREST_SELECTION_MAX}개까지예요` : undefined}
+            >
+              {item}
+            </SelectChip>
+          );
+        })}
       </div>
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>

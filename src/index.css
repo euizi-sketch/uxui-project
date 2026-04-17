@@ -1,22 +1,121 @@
+/**
+ * 본문: 영어·라틴 → SUIT Variable, 한글·한국어 부호 → Pretendard Variable (unicode-range)
+ * 로고(MOMOA 등)는 컴포넌트에서 GeekbleMalang2를 별도 지정
+ */
+@font-face {
+  font-family: "MOMOA UI";
+  font-style: normal;
+  font-weight: 100 900;
+  /* swap은 로드 후 글리프 교체로 첫 화면 문구가 흔들임 → optional로 재스왑 방지, preload와 함께 사용 */
+  font-display: optional;
+  src: url("https://cdn.jsdelivr.net/npm/@sun-typeface/suit@2.0.5/fonts/variable/woff2/SUIT-Variable.woff2")
+    format("woff2-variations");
+  unicode-range: U+0020-007F, U+0080-00FF, U+0100-017F, U+0180-024F, U+0250-02AF, U+1E00-1EFF;
+}
+
+@font-face {
+  font-family: "MOMOA UI";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: optional;
+  src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/variable/woff2/PretendardVariable.woff2")
+    format("woff2-variations");
+  unicode-range: U+1100-11FF, U+3130-318F, U+AC00-D7A3, U+A960-A97F, U+D7B0-D7FF, U+3000-303F,
+    U+3260-327F, U+FF00-FFEF, U+FE50-FE6F, U+2000-206F, U+2070-209F, U+20A0-20CF, U+2190-21FF,
+    U+2460-24FF, U+25A0-25FF;
+}
+
+@font-face {
+  font-family: "GeekbleMalang2";
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src:
+    url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302_01@1.0/GeekbleMalang2WOFF2.woff2")
+      format("woff2");
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
+@layer utilities {
+  /**
+   * 뷰포트 세로 전체 + 가로는 앱 폭만 차지 (tailwind theme max-w-app 과 동일 430px)
+   * @apply max-w-app 는 일부 빌드에서 유틸 레이어와 충돌할 수 있어 숫자로 고정
+   */
+  .app-viewport-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    width: 100%;
+    max-width: 430px;
+    transform: translateX(-50%);
+    top: env(safe-area-inset-top, 0px);
+  }
+
+  .app-bottom-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    width: 100%;
+    max-width: 430px;
+    transform: translateX(-50%);
+  }
+
+  /**
+   * 고정 하단 탭·노치 홈 인디케이터 위로 본문이 잘리지 않도록
+   * (기존 pb-28 ≈ 7rem + safe-area)
+   */
+  .pb-safe-tab {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+html {
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-text-size-adjust: 100%;
+}
+
 #root {
-  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 body {
+  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
-  background: #f8fafc;
-  font-family:
-    "Pretendard",
-    "Apple SD Gothic Neo",
-    "Noto Sans KR",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  overflow-x: hidden;
+  background: #f1f5f9;
+  font-family: "MOMOA UI", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /** 한글 단어 중간 줄바꿈 완화 — 레이아웃은 각 블록에서 min-w-0·line-clamp와 함께 사용 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/**
+ * 메인 탭 공통: 상단 하이라이트 → 기존 하늘색 유지 (#E0F3F9 계열)
+ */
+@layer components {
+  .app-screen {
+    min-height: 100dvh;
+    background: #e8f4fc;
+  }
+
+  /** 육아용품 탭: 살구·크림 단색 */
+  .app-screen-warm {
+    min-height: 100dvh;
+    background: #fff7f0;
+  }
+
+  /** 카드·패널 공통: 레퍼런스처럼 얇은 테두리 + 부드러운 그림자 */
+  .card-soft {
+    @apply rounded-[1.35rem] border border-white/80 bg-white/90 shadow-[0_8px_40px_-12px_rgba(15,23,42,0.07)];
+  }
 }

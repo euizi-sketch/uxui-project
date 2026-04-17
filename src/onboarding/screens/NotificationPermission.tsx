@@ -13,7 +13,7 @@ export default function NotificationPermission({
         type="button"
         onClick={() => onSelect(true)}
         className={`w-full rounded-xl border p-4 text-left ${
-          value === true ? "border-violet-500 bg-violet-50" : "border-slate-200"
+          value === true ? "border-[#FF853E] bg-[#FFF1EA]" : "border-slate-200"
         }`}
       >
         <p className="font-semibold text-slate-800">알림 허용</p>
@@ -23,7 +23,7 @@ export default function NotificationPermission({
         type="button"
         onClick={() => onSelect(false)}
         className={`w-full rounded-xl border p-4 text-left ${
-          value === false ? "border-violet-500 bg-violet-50" : "border-slate-200"
+          value === false ? "border-[#FF853E] bg-[#FFF1EA]" : "border-slate-200"
         }`}
       >
         <p className="font-semibold text-slate-800">지금은 거절</p>
