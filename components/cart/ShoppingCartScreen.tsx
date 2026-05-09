@@ -8,6 +8,84 @@ function formatWon(n: number): string {
   return n.toLocaleString("ko-KR");
 }
 
+type CartRecommendation = {
+  id: number;
+  name: string;
+  priceLabel: string;
+  imageUrl: string;
+  tags: string[];
+};
+
+const NEXT_UP_PRODUCTS: CartRecommendation[] = [
+  {
+    id: 90101,
+    name: "밤부 아기물티슈 캡형 10팩",
+    priceLabel: "15,900",
+    imageUrl:
+      "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&w=600&q=80",
+    tags: ["물티슈", "기저귀", "위생"],
+  },
+  {
+    id: 90102,
+    name: "유아 세탁세제 저자극 리필 세트",
+    priceLabel: "19,800",
+    imageUrl:
+      "https://images.unsplash.com/photo-1610552050890-fe99536c2612?auto=format&fit=crop&w=600&q=80",
+    tags: ["세제", "위생", "세탁"],
+  },
+  {
+    id: 90103,
+    name: "아기 보습 로션 2개입",
+    priceLabel: "24,500",
+    imageUrl:
+      "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=600&q=80",
+    tags: ["스킨케어", "보습"],
+  },
+  {
+    id: 90104,
+    name: "실리콘 이유식 턱받이 2종",
+    priceLabel: "12,900",
+    imageUrl:
+      "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=600&q=80",
+    tags: ["이유식", "식기"],
+  },
+];
+
+const RELATED_PRODUCTS: CartRecommendation[] = [
+  {
+    id: 90201,
+    name: "흡수력 좋은 기저귀 팬츠형 4팩",
+    priceLabel: "43,900",
+    imageUrl:
+      "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=600&q=80",
+    tags: ["기저귀", "위생"],
+  },
+  {
+    id: 90202,
+    name: "이유식 큐브 트레이 4종 세트",
+    priceLabel: "11,500",
+    imageUrl:
+      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
+    tags: ["이유식", "식기"],
+  },
+  {
+    id: 90203,
+    name: "유모차 컵홀더 + 수납포켓",
+    priceLabel: "18,700",
+    imageUrl:
+      "https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=600&q=80",
+    tags: ["유모차", "외출"],
+  },
+  {
+    id: 90204,
+    name: "치발기 냉감 3종 세트",
+    priceLabel: "14,300",
+    imageUrl:
+      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=600&q=80",
+    tags: ["장난감", "치발기"],
+  },
+];
+
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -25,6 +103,7 @@ export default function ShoppingCartScreen() {
     removeSelectedLines,
     checkoutCoupon,
     applyCheckoutCoupon,
+    addToCart,
   } = useCartScreen();
 
   const [couponModalOpen, setCouponModalOpen] = useState(false);
@@ -35,6 +114,23 @@ export default function ShoppingCartScreen() {
   const allSelected = lines.length > 0 && selectedCount === lines.length;
 
   const selectedLines = useMemo(() => lines.filter((l) => l.selected), [lines]);
+  const cartProductIds = useMemo(() => new Set(lines.map((line) => line.productId)), [lines]);
+
+  const nextUpRecommendations = useMemo(
+    () => NEXT_UP_PRODUCTS.filter((item) => !cartProductIds.has(item.id)).slice(0, 4),
+    [cartProductIds]
+  );
+
+  const relatedRecommendations = useMemo(() => {
+    const keywordCandidates = ["기저귀", "물티슈", "이유식", "유모차", "장난감", "스킨", "세제", "분유"];
+    const activeKeywords = keywordCandidates.filter((keyword) => lines.some((line) => line.name.includes(keyword)));
+    const matched = RELATED_PRODUCTS.filter(
+      (item) => !cartProductIds.has(item.id) && item.tags.some((tag) => activeKeywords.some((k) => tag.includes(k)))
+    );
+    if (matched.length >= 3) return matched.slice(0, 4);
+    const fallback = RELATED_PRODUCTS.filter((item) => !cartProductIds.has(item.id));
+    return [...matched, ...fallback.filter((item) => !matched.some((m) => m.id === item.id))].slice(0, 4);
+  }, [cartProductIds, lines]);
 
   const subtotal = useMemo(
     () => selectedLines.reduce((s, l) => s + l.unitWon * l.quantity, 0),
@@ -303,6 +399,77 @@ export default function ShoppingCartScreen() {
                 })}
               </div>
             </div>
+
+            <section className="border-b border-slate-100 bg-white px-4 py-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-[14px] font-bold text-slate-900">다음 상품 추천</h2>
+                <span className="text-[11px] font-medium text-slate-500">많이 함께 담아요</span>
+              </div>
+              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                {nextUpRecommendations.map((item) => (
+                  <article
+                    key={item.id}
+                    className="w-[150px] shrink-0 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm"
+                  >
+                    <div className="h-24 overflow-hidden rounded-xl bg-slate-100">
+                      <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-[12px] font-semibold leading-snug text-slate-900">{item.name}</p>
+                    <p className="mt-1 text-[13px] font-bold text-[#FF853E]">{item.priceLabel}원</p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        addToCart({
+                          id: item.id,
+                          name: item.name,
+                          price: item.priceLabel,
+                          imageUrl: item.imageUrl,
+                        })
+                      }
+                      className="mt-2 w-full rounded-lg border border-[#FF853E]/30 bg-[#FFF5EF] py-1.5 text-[11px] font-bold text-[#EA580C]"
+                    >
+                      장바구니 담기
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="border-b border-slate-100 bg-white px-4 py-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-[14px] font-bold text-slate-900">연관 추천 상품</h2>
+                <span className="text-[11px] font-medium text-slate-500">담은 상품 기반 추천</span>
+              </div>
+              <div className="space-y-2.5">
+                {relatedRecommendations.map((item) => (
+                  <article key={item.id} className="flex gap-3 rounded-2xl border border-slate-200 p-2.5">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                      <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-slate-900">{item.name}</p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <span className="text-[13px] font-bold text-[#FF853E]">{item.priceLabel}원</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            addToCart({
+                              id: item.id,
+                              name: item.name,
+                              price: item.priceLabel,
+                              imageUrl: item.imageUrl,
+                            })
+                          }
+                          className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-700"
+                        >
+                          담기
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
 
             <div className="bg-slate-50 px-4 py-4">
               <p className="text-[14px] font-bold text-slate-900">예상 결제금액</p>

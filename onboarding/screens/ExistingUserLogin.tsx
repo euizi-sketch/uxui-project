@@ -8,6 +8,8 @@ interface ExistingUserLoginProps {
   onChange: (next: { userId?: string; password?: string }) => void;
   onFindId: () => void;
   onFindPassword: () => void;
+  /** 폼 제출 시(아이디·비번 칸에서 Enter 포함) 호출 — 로그인 처리 */
+  onSubmitLogin?: () => void;
 }
 
 export default function ExistingUserLogin({
@@ -17,6 +19,7 @@ export default function ExistingUserLogin({
   onChange,
   onFindId,
   onFindPassword,
+  onSubmitLogin,
 }: ExistingUserLoginProps) {
   const [touched, setTouched] = useState({ userId: false, password: false });
 
@@ -29,6 +32,11 @@ export default function ExistingUserLogin({
     };
   }, [password, touched.password, touched.userId, userId]);
 
+  const trySubmit = () => {
+    if (!userId.trim() || !password) return;
+    onSubmitLogin?.();
+  };
+
   return (
     <div className="space-y-4">
       {error ? (
@@ -37,19 +45,31 @@ export default function ExistingUserLogin({
         </p>
       ) : null}
       <InputField
+        id="existing-login-userid"
         label="아이디"
         value={userId}
         onBlur={() => setTouched((t) => ({ ...t, userId: true }))}
         onChange={(e) => onChange({ userId: e.target.value })}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter") return;
+          e.preventDefault();
+          document.getElementById("existing-login-password")?.focus();
+        }}
         error={errors.userId}
         autoComplete="username"
       />
       <InputField
+        id="existing-login-password"
         label="비밀번호"
         type="password"
         value={password}
         onBlur={() => setTouched((t) => ({ ...t, password: true }))}
         onChange={(e) => onChange({ password: e.target.value })}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter") return;
+          e.preventDefault();
+          trySubmit();
+        }}
         error={errors.password}
         autoComplete="current-password"
       />

@@ -1,4 +1,5 @@
-import { dispatchHubUpdated } from "../../profile/myPageHubStorage";
+import { dispatchHubUpdated, issuePlaygroundBundleCoupon } from "../../profile/myPageHubStorage";
+import { EVENT_CAROUSEL_ITEMS, type EventItem } from "./eventCarouselData";
 
 const POLL_KEY = "momoA.playground.pollVotes";
 const REVIEWS_KEY = "momoA.playground.realReviews";
@@ -36,6 +37,28 @@ export function savePollVote(eventId: string, option: string) {
   const prev = loadPollVotes();
   prev[eventId] = option;
   localStorage.setItem(POLL_KEY, JSON.stringify(prev));
+}
+
+/** 모달·스탬프 조건 계산 공통 — 시드 집계 + 내 투표 1표 반영 */
+const POLL_COUNT_SEED: Record<string, Record<string, number>> = {
+  "poll-sleep": { "수면 교육": 98, 수면템: 112, 버팀: 67, 기타: 35 },
+};
+
+export function mergePollCountsForPollEvent(event: EventItem): Record<string, number> {
+  const opts = event.pollOptions ?? [];
+  const seed =
+    POLL_COUNT_SEED[event.id] ?? Object.fromEntries(opts.map((o) => [o, 40 + (o.length * 7) % 50]));
+  const out: Record<string, number> = { ...seed };
+  const votes = loadPollVotes();
+  const mine = votes[event.id];
+  if (mine && out[mine] != null) out[mine] += 1;
+  return out;
+}
+
+function mergePollCountsForPollById(eventId: string): Record<string, number> | null {
+  const event = EVENT_CAROUSEL_ITEMS.find((e) => e.id === eventId && e.variant === "poll");
+  if (!event) return null;
+  return mergePollCountsForPollEvent(event);
 }
 
 export type PlaygroundReview = {
@@ -259,4 +282,168 @@ export function addRegretAgree(rank: number) {
   const m = loadRegretAgrees();
   m[rank] = (m[rank] ?? 0) + 1;
   localStorage.setItem(REGRET_AGREE_KEY, JSON.stringify(m));
+}
+
+// ——— 플레이그라운드 참여 스탬프 → 쿠폰 번들 ———
+
+const STAMP_BUNDLE_KEY = "momoA.playground.stampBundle.v1";
+
+export const PLAYGROUND_BUNDLE_STAMPS_NEEDED = 3;
+export const PLAYGROUND_REWARD_UPDATED_EVENT = "momoA-playground-reward-updated";
+
+type StampBundleState = {
+  /** 이벤트 카드별 첫 참여 1스탬프 (같은 카드 중복 참여는 스탬프 추가 없음) */
+  stampedEventIds: string[];
+};
+
+function loadStampBundle(): StampBundleState {
+  try {
+    const raw = localStorage.getItem(STAMP_BUNDLE_KEY);
+    if (!raw) return { stampedEventIds: [] };
+    const o = JSON.parse(raw) as unknown;
+    if (!o || typeof o !== "object") return { stampedEventIds: [] };
+    const ids = (o as { stampedEventIds?: unknown }).stampedEventIds;
+    if (!Array.isArray(ids)) return { stampedEventIds: [] };
+    return { stampedEventIds: ids.filter((x): x is string => typeof x === "string") };
+  } catch {
+    return { stampedEventIds: [] };
+  }
+}
+
+function saveStampBundle(s: StampBundleState) {
+  localStorage.setItem(STAMP_BUNDLE_KEY, JSON.stringify(s));
+}
+
+function dispatchPlaygroundRewardUpdated() {
+  window.dispatchEvent(new CustomEvent(PLAYGROUND_REWARD_UPDATED_EVENT));
+}
+
+export function getPlaygroundStampProgress(): {
+  stampCount: number;
+  needed: number;
+  canClaimBundle: boolean;
+} {
+  const s = loadStampBundle();
+  const n = s.stampedEventIds.length;
+  return {
+    stampCount: n,
+    needed: PLAYGROUND_BUNDLE_STAMPS_NEEDED,
+    canClaimBundle: n >= PLAYGROUND_BUNDLE_STAMPS_NEEDED,
+  };
+}
+
+export type StampAwardResult = {
+  /** 조건 충족으로 이번에 스탬프가 새로 찍혔는지 */
+  awarded: boolean;
+  stampCount: number;
+  canClaimBundle: boolean;
+};
+
+function stampBundleResult(stampedEventIds: string[], awarded: boolean): StampAwardResult {
+  const n = stampedEventIds.length;
+  return {
+    awarded,
+    stampCount: n,
+    canClaimBundle: n >= PLAYGROUND_BUNDLE_STAMPS_NEEDED,
+  };
+}
+
+function tryAddStamp(eventId: string): StampAwardResult {
+  const s = loadStampBundle();
+  if (s.stampedEventIds.includes(eventId)) {
+    return stampBundleResult(s.stampedEventIds, false);
+  }
+  const stampedEventIds = [...s.stampedEventIds, eventId];
+  saveStampBundle({ stampedEventIds });
+  dispatchPlaygroundRewardUpdated();
+  return stampBundleResult(stampedEventIds, true);
+}
+
+/** 투표: 집계상 1위(최다 득표) 보기에 투표했을 때만 */
+export function tryAwardPollVoteStamp(eventId: string, chosenOption: string): StampAwardResult {
+  const counts = mergePollCountsForPollById(eventId);
+  if (!counts || !(chosenOption in counts)) return stampBundleResult(loadStampBundle().stampedEventIds, false);
+  const max = Math.max(...Object.values(counts));
+  if (counts[chosenOption] !== max) return stampBundleResult(loadStampBundle().stampedEventIds, false);
+  return tryAddStamp(eventId);
+}
+
+/** 후기: 별점·글·사진 기준으로 ‘인기 후기’로 볼 만한 조건일 때만 */
+export function playgroundReviewQualifiesPopular(body: string, rating: number, photoUrl: string): boolean {
+  const t = body.trim();
+  const len = t.length;
+  const photo = Boolean(photoUrl.trim());
+  if (rating <= 3) return false;
+  if (rating >= 5 && len >= 45) return true;
+  if (rating >= 4 && len >= 95) return true;
+  if (photo && rating >= 4 && len >= 38) return true;
+  return false;
+}
+
+export function tryAwardReviewStamp(
+  eventId: string,
+  args: { body: string; rating: number; photoUrl: string }
+): StampAwardResult {
+  if (!playgroundReviewQualifiesPopular(args.body, args.rating, args.photoUrl)) {
+    return stampBundleResult(loadStampBundle().stampedEventIds, false);
+  }
+  return tryAddStamp(eventId);
+}
+
+/** 비교 투표: 후회/만족 중 비율이 더 높은 쪽에 맞춰 투표했을 때만 */
+export function tryAwardCompareVoteStamp(
+  eventId: string,
+  productName: string,
+  side: "regret" | "happy",
+  seedRegret: number,
+  seedHappy: number
+): StampAwardResult {
+  const c = getCompareCounts(productName, seedRegret, seedHappy);
+  const leading: "regret" | "happy" | null =
+    c.regret > c.happy ? "regret" : c.happy > c.regret ? "happy" : null;
+  if (leading === null || side !== leading) {
+    return stampBundleResult(loadStampBundle().stampedEventIds, false);
+  }
+  return tryAddStamp(eventId);
+}
+
+const PARENTS_PEER_STAMP_MIN = 165;
+
+/** 비슷한 부모 수 추정이 일정 이상일 때만 (코호트가 두터울 때) */
+export function tryAwardParentsStamp(eventId: string, estimatedPeers: number): StampAwardResult {
+  if (estimatedPeers < PARENTS_PEER_STAMP_MIN) {
+    return stampBundleResult(loadStampBundle().stampedEventIds, false);
+  }
+  return tryAddStamp(eventId);
+}
+
+/** 성향 테스트: 3문항 전부 같은 쪽(0점·6점)처럼 뚜렷한 유형일 때만 */
+export function tryAwardPersonalityStamp(eventId: string, finalScore: number): StampAwardResult {
+  if (finalScore !== 0 && finalScore !== 6) {
+    return stampBundleResult(loadStampBundle().stampedEventIds, false);
+  }
+  return tryAddStamp(eventId);
+}
+
+/** 후회 TOP: 1위 항목에 공감했을 때만 */
+export function tryAwardRegretStamp(eventId: string, rank: number): StampAwardResult {
+  if (rank !== 1) return stampBundleResult(loadStampBundle().stampedEventIds, false);
+  return tryAddStamp(eventId);
+}
+
+export function claimPlaygroundBundleReward(): { ok: boolean; message: string } {
+  const s = loadStampBundle();
+  if (s.stampedEventIds.length < PLAYGROUND_BUNDLE_STAMPS_NEEDED) {
+    return {
+      ok: false,
+      message: `서로 다른 카드에서 참여해 스탬프를 ${PLAYGROUND_BUNDLE_STAMPS_NEEDED}개 모아 주세요.`,
+    };
+  }
+  issuePlaygroundBundleCoupon();
+  saveStampBundle({ stampedEventIds: [] });
+  dispatchPlaygroundRewardUpdated();
+  return {
+    ok: true,
+    message: "쿠폰함에 3천원 할인 쿠폰이 발급됐어요. 결제 전 쿠폰함에서 선택할 수 있어요.",
+  };
 }

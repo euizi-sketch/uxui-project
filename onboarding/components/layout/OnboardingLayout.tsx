@@ -39,7 +39,7 @@ export default function OnboardingLayout({
 }: OnboardingLayoutProps) {
   return (
     <div
-      className={`flex min-h-[100dvh] w-full flex-col bg-sky-100 px-5 pb-safe-tab pt-[calc(2rem+env(safe-area-inset-top,0px))] ${containerClassName}`}
+      className={`flex min-h-[100dvh] w-full flex-col bg-white px-5 pb-safe-tab pt-[calc(2rem+env(safe-area-inset-top,0px))] ${containerClassName}`}
     >
       {showStep && stepLabels.length > 0 && (
         <div className="mb-6 shrink-0">
@@ -60,7 +60,7 @@ export default function OnboardingLayout({
         </div>
       </div>
       {ctaLabel && onCtaClick && (
-        <footer className="app-bottom-fixed z-40 border-t border-slate-200/80 bg-sky-100 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] pt-4">
+        <footer className="app-bottom-fixed z-40 border-t border-slate-200/80 bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] pt-4">
           <div className="w-full">
             <div className="flex gap-3">
               {backLabel && onBackClick && (

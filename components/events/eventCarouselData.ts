@@ -26,7 +26,7 @@ export const EVENT_CAROUSEL_ITEMS: EventItem[] = [
     title: "우리 아기, 이럴 때 어떻게 했어요?",
     description: "비슷한 부모들의 선택을 확인해보세요",
     participants: 312,
-    ctaLabel: "투표 참여하기",
+    ctaLabel: "투표하기",
     hot: true,
     popular: true,
     accent: "🗳️",

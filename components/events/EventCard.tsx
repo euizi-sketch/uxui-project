@@ -1,18 +1,20 @@
 import React, { useState } from "react";
+import { loadPollVotes, savePollVote, tryAwardPollVoteStamp } from "./playgroundStorage";
 import type { EventItem } from "./eventCarouselData";
 
 type Props = {
   event: EventItem;
-  onOpenPlayground: (event: EventItem) => void;
+  /** fromCta: 카드 하단 주황 버튼으로 열었을 때 true → 테스트 등 즉시 실행 모드 */
+  onOpenPlayground: (event: EventItem, fromCta?: boolean) => void;
 };
 
 export function EventCard({ event, onOpenPlayground }: Props) {
-  const [pollChoice, setPollChoice] = useState<string | null>(null);
+  const [pollChoice, setPollChoice] = useState<string | null>(() => loadPollVotes()[event.id] ?? null);
 
   const handleCardClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest("button")) return;
-    onOpenPlayground(event);
+    onOpenPlayground(event, false);
   };
 
   const participantsClass = event.popular
@@ -27,7 +29,7 @@ export function EventCard({ event, onOpenPlayground }: Props) {
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onOpenPlayground(event);
+          onOpenPlayground(event, false);
         }
       }}
       className="group relative flex h-full min-h-[280px] w-full cursor-pointer flex-col overflow-hidden rounded-[28px] bg-white/95 shadow-[0_8px_28px_-10px_rgba(15,23,42,0.1)] transition duration-300 ease-out hover:shadow-[0_12px_36px_-10px_rgba(249,115,22,0.2)] md:hover:scale-[1.02] md:active:scale-[0.99]"
@@ -59,7 +61,12 @@ export function EventCard({ event, onOpenPlayground }: Props) {
               <button
                 key={opt}
                 type="button"
-                onClick={() => setPollChoice(opt)}
+                onClick={() => {
+                  savePollVote(event.id, opt);
+                  tryAwardPollVoteStamp(event.id, opt);
+                  setPollChoice(opt);
+                  onOpenPlayground(event, false);
+                }}
                 className={`rounded-full px-3 py-2 text-xs font-bold transition ${
                   pollChoice === opt
                     ? "bg-[#F97316] text-white shadow-sm"
@@ -133,7 +140,7 @@ export function EventCard({ event, onOpenPlayground }: Props) {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onOpenPlayground(event);
+              onOpenPlayground(event, true);
             }}
             className="w-full rounded-2xl bg-[#F97316] py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-[#EA580C] active:scale-[0.98]"
           >

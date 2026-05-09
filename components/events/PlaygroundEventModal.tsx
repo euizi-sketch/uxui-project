@@ -15,12 +15,15 @@ import {
   savePersonalityResult,
   savePlaygroundReview,
   savePollVote,
+  mergePollCountsForPollEvent,
+  tryAwardPollVoteStamp,
+  tryAwardReviewStamp,
+  tryAwardCompareVoteStamp,
+  tryAwardParentsStamp,
+  tryAwardPersonalityStamp,
+  tryAwardRegretStamp,
   voteCompare,
 } from "./playgroundStorage";
-
-const POLL_SEED: Record<string, Record<string, number>> = {
-  "poll-sleep": { "수면 교육": 98, 수면템: 112, 버팀: 67, 기타: 35 },
-};
 
 const COMPARE_CATALOG: { name: string; regret: number; happy: number; tip: string }[] = [
   {
@@ -81,22 +84,14 @@ const TEST_Q = [
   },
 ];
 
-function mergePollCounts(event: EventItem): Record<string, number> {
-  const opts = event.pollOptions ?? [];
-  const seed = POLL_SEED[event.id] ?? Object.fromEntries(opts.map((o) => [o, 40 + (o.length * 7) % 50]));
-  const out: Record<string, number> = { ...seed };
-  const votes = loadPollVotes();
-  const mine = votes[event.id];
-  if (mine && out[mine] != null) out[mine] += 1;
-  return out;
-}
-
 type Props = {
   event: EventItem | null;
   onClose: () => void;
+  /** 카드 하단 CTA로 열었을 때 성향 테스트는 인트로 없이 바로 문항 시작 */
+  autoStartTest?: boolean;
 };
 
-export function PlaygroundEventModal({ event, onClose }: Props) {
+export function PlaygroundEventModal({ event, onClose, autoStartTest = false }: Props) {
   const [tick, setTick] = useState(0);
   const refresh = useCallback(() => setTick((t) => t + 1), []);
 
@@ -128,11 +123,20 @@ export function PlaygroundEventModal({ event, onClose }: Props) {
 
         <div className="max-h-[min(78dvh,600px)] overflow-y-auto px-5 py-5">
           {event.variant === "poll" && <PollPanel event={event} onVoted={refresh} tick={tick} />}
-          {event.variant === "challenge" && <ReviewPanel onClose={onClose} />}
-          {event.variant === "compare" && <ComparePanel />}
-          {event.variant === "parents" && <ParentsPanel />}
-          {event.variant === "test" && <TypeTestPanel onClose={onClose} />}
-          {event.variant === "regret" && <RegretPanel />}
+          {event.variant === "challenge" && (
+            <ReviewPanel eventId={event.id} onClose={onClose} />
+          )}
+          {event.variant === "compare" && <ComparePanel eventId={event.id} />}
+          {event.variant === "parents" && <ParentsPanel eventId={event.id} />}
+          {event.variant === "test" && (
+            <TypeTestPanel
+              key={`${event.id}-${autoStartTest}`}
+              eventId={event.id}
+              autoStartTest={autoStartTest}
+              onClose={onClose}
+            />
+          )}
+          {event.variant === "regret" && <RegretPanel eventId={event.id} />}
         </div>
       </div>
     </div>
@@ -149,18 +153,26 @@ function PollPanel({
   tick: number;
 }) {
   const options = event.pollOptions ?? [];
-  const counts = useMemo(() => mergePollCounts(event), [event, tick]);
+  const counts = useMemo(() => mergePollCountsForPollEvent(event), [event, tick]);
   const myVote = loadPollVotes()[event.id];
   const total = Math.max(1, Object.values(counts).reduce((a, b) => a + b, 0));
+  /** 투표하기 전에는 집계 비율·막대를 숨김 (선택 후에만 공개) */
+  const showBreakdown = Boolean(myVote);
 
   const submit = (opt: string) => {
     savePollVote(event.id, opt);
+    tryAwardPollVoteStamp(event.id, opt);
     onVoted();
   };
 
   return (
     <div className="space-y-5">
       <p className="text-sm font-normal text-slate-600">{event.description}</p>
+      {!showBreakdown && (
+        <p className="rounded-2xl bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600 ring-1 ring-slate-100">
+          한 가지를 고르면 전체 비율이 공개돼요.
+        </p>
+      )}
       <div className="space-y-3">
         {options.map((opt) => {
           const n = counts[opt] ?? 0;
@@ -177,16 +189,18 @@ function PollPanel({
                   : "border-slate-200 bg-white hover:border-[#FFD2BF] hover:bg-slate-50"
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className={`flex items-center gap-2 ${showBreakdown ? "justify-between" : ""}`}>
                 <span className="text-sm font-bold text-slate-900">{opt}</span>
-                <span className="text-xs font-bold text-[#FF853E]">{pct}%</span>
+                {showBreakdown ? <span className="text-xs font-bold text-[#FF853E]">{pct}%</span> : null}
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-[#FF853E] transition-all duration-500"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
+              {showBreakdown ? (
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-[#FF853E] transition-all duration-500"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              ) : null}
             </button>
           );
         })}
@@ -201,7 +215,7 @@ function PollPanel({
   );
 }
 
-function ReviewPanel({ onClose }: { onClose: () => void }) {
+function ReviewPanel({ eventId, onClose }: { eventId: string; onClose: () => void }) {
   const [productName, setProductName] = useState("");
   const [rating, setRating] = useState(5);
   const [body, setBody] = useState("");
@@ -232,6 +246,11 @@ function ReviewPanel({ onClose }: { onClose: () => void }) {
       productName: productName.trim() || "(제품명 미입력)",
       rating,
       body: body.trim(),
+      photoUrl: photoUrl.trim(),
+    });
+    tryAwardReviewStamp(eventId, {
+      body: body.trim(),
+      rating,
       photoUrl: photoUrl.trim(),
     });
     const bal = addWalletPoints(REVIEW_SUBMIT_POINTS, "플레이그라운드 리얼 후기");
@@ -354,7 +373,7 @@ function ReviewPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ComparePanel() {
+function ComparePanel({ eventId }: { eventId: string }) {
   const [idx, setIdx] = useState(0);
   const [tick, setTick] = useState(0);
   const p = COMPARE_CATALOG[idx];
@@ -369,6 +388,7 @@ function ComparePanel() {
 
   const vote = (side: "regret" | "happy") => {
     voteCompare(p.name, side, p.regret, p.happy);
+    tryAwardCompareVoteStamp(eventId, p.name, side, p.regret, p.happy);
     setTick((t) => t + 1);
   };
 
@@ -426,7 +446,7 @@ function ComparePanel() {
   );
 }
 
-function ParentsPanel() {
+function ParentsPanel({ eventId }: { eventId: string }) {
   const [months, setMonths] = useState(6);
   const [concern, setConcern] = useState("");
   const [result, setResult] = useState<number | null>(null);
@@ -439,6 +459,7 @@ function ParentsPanel() {
     if (!trimmed) return;
     const estimated = estimateSimilarParents(months, trimmed);
     appendParentsQuery({ months, concern: trimmed, estimatedPeers: estimated });
+    tryAwardParentsStamp(eventId, estimated);
     setResult(estimated);
     setTick((t) => t + 1);
   };
@@ -512,9 +533,17 @@ function personalityFromScore(finalScore: number): { label: string; tip: string 
   return { label, tip };
 }
 
-function TypeTestPanel({ onClose }: { onClose: () => void }) {
+function TypeTestPanel({
+  eventId,
+  autoStartTest = false,
+  onClose,
+}: {
+  eventId: string;
+  autoStartTest?: boolean;
+  onClose: () => void;
+}) {
   type Phase = "intro" | "quiz" | "done";
-  const [phase, setPhase] = useState<Phase>("intro");
+  const [phase, setPhase] = useState<Phase>(() => (autoStartTest ? "quiz" : "intro"));
   const [qIndex, setQIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [savedSnap, setSavedSnap] = useState(() => loadPersonalityResult());
@@ -533,6 +562,7 @@ function TypeTestPanel({ onClose }: { onClose: () => void }) {
     if (qIndex + 1 >= TEST_Q.length) {
       const { label, tip } = personalityFromScore(nextScore);
       savePersonalityResult({ label, score: nextScore, tip });
+      tryAwardPersonalityStamp(eventId, nextScore);
       setSavedSnap(loadPersonalityResult());
       setPhase("done");
     } else {
@@ -630,7 +660,7 @@ function TypeTestPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function RegretPanel() {
+function RegretPanel({ eventId }: { eventId: string }) {
   const [tick, setTick] = useState(0);
   const agrees = useMemo(() => loadRegretAgrees(), [tick]);
 
@@ -661,6 +691,7 @@ function RegretPanel() {
                 type="button"
                 onClick={() => {
                   addRegretAgree(row.rank);
+                  tryAwardRegretStamp(eventId, row.rank);
                   setTick((t) => t + 1);
                 }}
                 className="mt-3 w-full rounded-xl border border-slate-200 bg-white py-2 text-xs font-bold text-slate-700 transition hover:border-[#FFD2BF] hover:bg-[#FFF8F4]"

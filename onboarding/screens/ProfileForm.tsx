@@ -108,23 +108,23 @@ export default function ProfileForm({ profile, errors, onChange }: ProfileFormPr
       />
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-slate-700">월 가구 소득 (선택)</p>
+        <p className="text-sm font-medium text-slate-700">월 육아용품 예산액 (선택)</p>
         <div className="space-y-1 text-[11px] font-medium leading-relaxed text-slate-500">
-          <p>입력하신 것을 토대로 육아용품 탭에서</p>
-          <p>그에 맞는 가격대가 먼저 보이도록 순서를 조정해 드려요.</p>
-          <p>부담이 되시면 비워 두셔도 괜찮아요.</p>
-          <p>그때는 가격은 따로 가리지 않고, 무난하게 추천해 드릴게요.</p>
+          <p>입력해 주신 예산액을 참고해서,</p>
+          <p>부담이 덜한 가격대의 상품을 먼저 추천해 드려요.</p>
+          <p>원하시면 비워 두셔도 괜찮고,</p>
+          <p>그 경우에는 여러 가격대를 고르게 보여드릴게요.</p>
         </div>
         <select
           value={profile.incomeBracket}
           onChange={(e) => onChange("incomeBracket", e.target.value as IncomeBracket)}
           className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-[#FF853E]"
         >
-          <option value="">선택 안 함 · 비공개</option>
-          <option value="lt400">월 400만원 미만</option>
-          <option value="400to700">월 400만원 ~ 700만원</option>
-          <option value="700to1000">월 700만원 ~ 1,000만원</option>
-          <option value="gte1000">월 1,000만원 이상</option>
+          <option value="">선택 안 함</option>
+          <option value="lt400">월 20만원 미만</option>
+          <option value="400to700">월 20만원 ~ 40만원</option>
+          <option value="700to1000">월 40만원 ~ 70만원</option>
+          <option value="gte1000">월 70만원 이상</option>
         </select>
       </div>
 

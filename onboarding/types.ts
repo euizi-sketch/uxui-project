@@ -23,7 +23,7 @@ export interface ChildProfileSlice {
   extraInfo: string;
 }
 
-/** 월 가구 소득 구간 — 육아용품 가격대 추천 가중치에 사용 */
+/** 월 육아용품 예산 구간 — 육아용품 가격대 추천 가중치에 사용 */
 export type IncomeBracket = "" | "lt400" | "400to700" | "700to1000" | "gte1000";
 
 export interface ProfileInput {

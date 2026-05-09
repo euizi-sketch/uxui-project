@@ -26,6 +26,7 @@ import {
   updateStoredPassword,
   verifyLogin,
 } from "../profile/accountCredentialsStorage";
+import { clearAllMomoLocalKeys } from "../settings/accountActions";
 import { INTEREST_SELECTION_MAX } from "./interestCategories";
 import {
   initialOnboardingState,
@@ -224,6 +225,8 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
         break;
       case "signupComplete": {
         if (state.userType) {
+          // 신규 가입은 항상 깨끗한 상태에서 시작하도록 기존 로컬 데이터 초기화
+          clearAllMomoLocalKeys();
           applySignupDefaultProfileImage(state.userType);
           persistMomoProfile(state.userType, state.profile, state.interests);
           const phoneDigits = `${state.profile.phone1}${state.profile.phone2}${state.profile.phone3}`.replace(
@@ -263,7 +266,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
         dispatch({ type: "SET_STEP", payload: "signUp" });
         break;
       case "userType":
-        dispatch({ type: "SET_STEP", payload: "login" });
+        dispatch({ type: "SET_STEP", payload: "signUpCredentials" });
         break;
       case "profile":
         dispatch({ type: "SET_STEP", payload: "userType" });
@@ -352,6 +355,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
             setLoginError("");
             dispatch({ type: "UPDATE_EXISTING_USER", payload: next });
           }}
+          onSubmitLogin={handleNext}
           onFindId={() => {
             setFindAccountTab("id");
             dispatch({ type: "SET_STEP", payload: "findAccount" });

@@ -3,10 +3,10 @@ import type { IncomeBracket } from "../onboarding/types";
 import { loadMyPageProfileFromStorage } from "../profile/momoProfileStorage";
 
 const INCOME_LABEL: Record<Exclude<IncomeBracket, "">, string> = {
-  lt400: "중위소득 400% 미만 구간",
-  "400to700": "400~700% 구간",
-  "700to1000": "700~1,000% 구간",
-  gte1000: "1,000% 이상 구간",
+  lt400: "월 20만원 미만",
+  "400to700": "월 20만~40만원",
+  "700to1000": "월 40만~70만원",
+  gte1000: "월 70만원 이상",
 };
 
 function ageInMonthsFromBirthDate(birth: Date): number {
@@ -36,7 +36,7 @@ export function getConsultationProfileHint(): string {
     parts.push(STAGE_KO[p.developmentStage]);
   }
   if (p.incomeBracket && INCOME_LABEL[p.incomeBracket as Exclude<IncomeBracket, "">]) {
-    parts.push(`가구 소득 ${INCOME_LABEL[p.incomeBracket as Exclude<IncomeBracket, "">]}`);
+    parts.push(`월 육아용품 예산 ${INCOME_LABEL[p.incomeBracket as Exclude<IncomeBracket, "">]}`);
   }
   if (p.interests?.length) parts.push(`관심사 ${p.interests.slice(0, 3).join("·")}`);
   return parts.length > 0 ? parts.join(" · ") : "프로필 정보가 적음 — 일반 시나리오 기준으로 안내합니다.";

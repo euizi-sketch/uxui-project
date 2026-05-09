@@ -3,17 +3,35 @@ import { EventCard } from "./EventCard";
 import { EVENT_CAROUSEL_ITEMS, type EventItem } from "./eventCarouselData";
 import { MomCommunityIcon } from "./MomCommunityIcon";
 import { PlaygroundEventModal } from "./PlaygroundEventModal";
+import { PlaygroundRewardStrip } from "./PlaygroundRewardStrip";
 
 export function EventCarousel() {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [playgroundEvent, setPlaygroundEvent] = useState<EventItem | null>(null);
+  const [playgroundFromCta, setPlaygroundFromCta] = useState(false);
+
+  const openPlayground = useCallback((ev: EventItem, fromCta?: boolean) => {
+    setPlaygroundEvent(ev);
+    setPlaygroundFromCta(Boolean(fromCta));
+  }, []);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
   const drag = useRef({ down: false, startX: 0, startScroll: 0, moved: false });
   const suppressClick = useRef(false);
   const [autoPaused, setAutoPaused] = useState(false);
   const hintDone = useRef(false);
+
+  /** 카드 안 버튼·링크 등에서는 캐러셀 드래그·포인터 캡처를 쓰지 않음 (투표 칩·CTA 클릭이 먹히도록) */
+  const shouldIgnoreCarouselDrag = useCallback((target: EventTarget | null) => {
+    const el = target as HTMLElement | null;
+    if (!el?.closest) return false;
+    return (
+      el.closest(
+        'button, a[href], input, textarea, select, label, [role="link"], [contenteditable="true"]',
+      ) != null
+    );
+  }, []);
 
   const updateArrowsAndIndex = useCallback(() => {
     const el = scrollerRef.current;
@@ -95,6 +113,7 @@ export function EventCarousel() {
   }, [autoPaused, activeIndex]);
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (shouldIgnoreCarouselDrag(e.target)) return;
     const el = scrollerRef.current;
     if (!el) return;
     drag.current = { down: true, startX: e.clientX, startScroll: el.scrollLeft, moved: false };
@@ -215,6 +234,8 @@ export function EventCarousel() {
           </div>
       </div>
 
+      <PlaygroundRewardStrip />
+
       <div className="relative">
         <button
           type="button"
@@ -256,7 +277,7 @@ export function EventCarousel() {
               data-event-card-slot
               className="w-[min(22.5rem,100%)] max-w-full shrink-0 snap-center"
             >
-              <EventCard event={event} onOpenPlayground={setPlaygroundEvent} />
+              <EventCard event={event} onOpenPlayground={openPlayground} />
             </div>
           ))}
         </div>
@@ -296,7 +317,14 @@ export function EventCarousel() {
         </div>
       </div>
 
-      <PlaygroundEventModal event={playgroundEvent} onClose={() => setPlaygroundEvent(null)} />
+      <PlaygroundEventModal
+        event={playgroundEvent}
+        autoStartTest={playgroundFromCta && playgroundEvent?.variant === "test"}
+        onClose={() => {
+          setPlaygroundEvent(null);
+          setPlaygroundFromCta(false);
+        }}
+      />
     </section>
   );
 }
