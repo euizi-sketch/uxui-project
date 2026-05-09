@@ -24,9 +24,7 @@ import {
 } from "./components/gear/GearShowcaseCard";
 import { GearCategoryFullScreen } from "./components/gear/GearCategoryFullScreen";
 import GrowthRhythmProfileCard from "./components/profile/GrowthRhythmProfileCard";
-import { InterestPersonalizedSection } from "./components/home/InterestPersonalizedSection";
-import { HomeHeroStrip } from "./components/home/HomeHeroStrip";
-import { EventCarousel } from "./components/events/EventCarousel";
+import NewHomeScreen from "./home/Home";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import ReviewHubPage from "./pages/ReviewHubPage";
 import WeeklyTop10DetailPage from "./pages/WeeklyTop10DetailPage";
@@ -1002,50 +1000,6 @@ function BabyGearScreen({
 }
 
 // 1-나. 홈 — 동네·MOMOA·알림 + 안내 (탭 이탈 시 언마운트 → 재진입 시 관심사 다시 로드)
-function Home() {
-  const [interests, setInterests] = useState(() => loadMyPageProfileFromStorage().interests);
-  const [homeGearSearch, setHomeGearSearch] = useState("");
-  const [homeGearCategory, setHomeGearCategory] = useState<(typeof GEAR_CATEGORIES)[number]["id"]>("all");
-  const [homeCategoryPanelOpen, setHomeCategoryPanelOpen] = useState(false);
-
-  useEffect(() => {
-    const sync = () => setInterests(loadMyPageProfileFromStorage().interests);
-    window.addEventListener("focus", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("focus", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
-  return (
-    <div className="flex min-h-dvh flex-col font-sans">
-      <div className="px-5 pt-5 sm:px-6 sm:pt-6">
-        <MainScreenTopBar />
-      </div>
-      <GearTopSearchRow
-        searchTerm={homeGearSearch}
-        onSearchChange={setHomeGearSearch}
-        onOpenCategoryPanel={() => setHomeCategoryPanelOpen(true)}
-      />
-
-      <HomeHeroStrip interests={interests} />
-
-      <div className="mt-6 flex flex-col gap-6 px-5 pb-safe-tab sm:px-6">
-        <EventCarousel />
-        <InterestPersonalizedSection interests={interests} />
-      </div>
-      <GearCategoryFullScreen
-        open={homeCategoryPanelOpen}
-        onClose={() => setHomeCategoryPanelOpen(false)}
-        categories={GEAR_CATEGORIES}
-        selectedCategoryId={homeGearCategory}
-        onSelectCategory={(id) => setHomeGearCategory(id as (typeof GEAR_CATEGORIES)[number]["id"])}
-      />
-    </div>
-  );
-}
-
 function MyPage({
   onOpenSettings,
   onOpenOrderHistory,
@@ -2175,7 +2129,34 @@ function MainTabs() {
   return (
     <CartScreenProvider>
     <div className="app-screen relative w-full">
-      {tab === "home" && <Home />}
+      {tab === "home" && (
+        <NewHomeScreen
+          onNavigate={(path) => {
+            switch (path) {
+              case "/home":
+                setTab("home");
+                break;
+              case "/profile":
+              case "/record":
+                setTab("mypage");
+                break;
+              case "/gear":
+                setTab("gear");
+                break;
+              case "/community":
+                setTab("community");
+                break;
+              case "/consult":
+              case "/today-recommend":
+                setTab("reviews");
+                break;
+              case "/feed":
+                setTab("community");
+                break;
+            }
+          }}
+        />
+      )}
       {tab === "gear" && (
         <BabyGearScreen
           onOpenReviewHub={() => setOverlay("reviewHub")}
